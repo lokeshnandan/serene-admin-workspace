@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,48 +31,45 @@ import {
   Edit,
   Trash2
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { fetchProducts, fetchLowStockProducts } from '@/services/productService';
+import { fetchDashboardStats, fetchSalesByDay, fetchSalesByCategory } from '@/services/analyticsService';
+import { fetchOrders } from '@/services/orderService';
+import { fetchUsers } from '@/services/userService';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Sample data for charts
-  const salesData = [
-    { name: 'Mon', sales: 2400 },
-    { name: 'Tue', sales: 1398 },
-    { name: 'Wed', sales: 9800 },
-    { name: 'Thu', sales: 3908 },
-    { name: 'Fri', sales: 4800 },
-    { name: 'Sat', sales: 3800 },
-    { name: 'Sun', sales: 4300 },
-  ];
+  // Fetch data using React Query
+  const { data: products, isLoading: loadingProducts } = useQuery({
+    queryKey: ['products'],
+    queryFn: fetchProducts
+  });
 
-  const categoryData = [
-    { name: 'Yoga Mats', value: 35, color: '#8FBC8F' },
-    { name: 'Ayurvedic Products', value: 30, color: '#D2B48C' },
-    { name: 'Meditation', value: 20, color: '#DDA0DD' },
-    { name: 'Accessories', value: 15, color: '#F0E68C' },
-  ];
+  const { data: orders, isLoading: loadingOrders } = useQuery({
+    queryKey: ['orders'],
+    queryFn: fetchOrders
+  });
 
-  const sampleProducts = [
-    { id: 1, name: 'Eco Yoga Mat - Sage', category: 'Yoga Merchandise', price: 89.99, stock: 15, status: 'Active' },
-    { id: 2, name: 'Ashwagandha Capsules - Vata', category: 'Ayurvedic Products', price: 34.99, stock: 3, status: 'Low Stock' },
-    { id: 3, name: 'Meditation Cushion', category: 'Yoga Merchandise', price: 45.99, stock: 8, status: 'Active' },
-    { id: 4, name: 'Turmeric Blend - Pitta', category: 'Ayurvedic Products', price: 28.99, stock: 12, status: 'Active' },
-  ];
+  const { data: users, isLoading: loadingUsers } = useQuery({
+    queryKey: ['users'],
+    queryFn: fetchUsers
+  });
 
-  const sampleOrders = [
-    { id: '#WS001', customer: 'Sarah Chen', date: '2024-05-23', status: 'Processing', total: 124.97 },
-    { id: '#WS002', customer: 'Mike Johnson', date: '2024-05-23', status: 'Shipped', total: 89.99 },
-    { id: '#WS003', customer: 'Emma Wilson', date: '2024-05-22', status: 'Delivered', total: 156.48 },
-    { id: '#WS004', customer: 'David Kumar', date: '2024-05-22', status: 'Pending', total: 203.45 },
-  ];
+  const { data: dashboardStats, isLoading: loadingStats } = useQuery({
+    queryKey: ['dashboardStats'],
+    queryFn: fetchDashboardStats
+  });
 
-  const sampleUsers = [
-    { id: 1, name: 'Sarah Chen', email: 'sarah@email.com', orders: 12, joined: '2024-01-15', status: 'Active' },
-    { id: 2, name: 'Mike Johnson', email: 'mike@email.com', orders: 8, joined: '2024-02-20', status: 'Active' },
-    { id: 3, name: 'Emma Wilson', email: 'emma@email.com', orders: 15, joined: '2023-11-10', status: 'Active' },
-    { id: 4, name: 'David Kumar', email: 'david@email.com', orders: 6, joined: '2024-03-05', status: 'Active' },
-  ];
+  const { data: salesData, isLoading: loadingSalesData } = useQuery({
+    queryKey: ['salesByDay'],
+    queryFn: () => fetchSalesByDay(7)
+  });
+
+  const { data: categoryData, isLoading: loadingCategoryData } = useQuery({
+    queryKey: ['salesByCategory'],
+    queryFn: fetchSalesByCategory
+  });
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -169,8 +166,16 @@ const Index = () => {
                     <CardTitle className="text-sm font-medium text-sage-600">Total Sales</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-sage-800">$12,456</div>
-                    <p className="text-xs text-green-600 mt-1">+15% from last month</p>
+                    {loadingStats ? (
+                      <div className="animate-pulse h-8 bg-gray-200 rounded w-24"></div>
+                    ) : (
+                      <>
+                        <div className="text-2xl font-bold text-sage-800">
+                          ${dashboardStats?.totalSales?.toFixed(2) || '0.00'}
+                        </div>
+                        <p className="text-xs text-green-600 mt-1">+15% from last month</p>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
                 <Card className="border-sage-200 hover:shadow-lg transition-shadow">
@@ -178,8 +183,14 @@ const Index = () => {
                     <CardTitle className="text-sm font-medium text-sage-600">Orders</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-sage-800">234</div>
-                    <p className="text-xs text-green-600 mt-1">+8% from last week</p>
+                    {loadingStats ? (
+                      <div className="animate-pulse h-8 bg-gray-200 rounded w-16"></div>
+                    ) : (
+                      <>
+                        <div className="text-2xl font-bold text-sage-800">{dashboardStats?.ordersCount || 0}</div>
+                        <p className="text-xs text-green-600 mt-1">+8% from last week</p>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
                 <Card className="border-sage-200 hover:shadow-lg transition-shadow">
@@ -187,8 +198,14 @@ const Index = () => {
                     <CardTitle className="text-sm font-medium text-sage-600">Active Users</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-sage-800">1,429</div>
-                    <p className="text-xs text-blue-600 mt-1">+12% this month</p>
+                    {loadingStats ? (
+                      <div className="animate-pulse h-8 bg-gray-200 rounded w-16"></div>
+                    ) : (
+                      <>
+                        <div className="text-2xl font-bold text-sage-800">{dashboardStats?.usersCount || 0}</div>
+                        <p className="text-xs text-blue-600 mt-1">+12% this month</p>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
                 <Card className="border-orange-200 hover:shadow-lg transition-shadow">
@@ -199,8 +216,14 @@ const Index = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-orange-800">7</div>
-                    <p className="text-xs text-orange-600 mt-1">Items need restock</p>
+                    {loadingStats ? (
+                      <div className="animate-pulse h-8 bg-gray-200 rounded w-8"></div>
+                    ) : (
+                      <>
+                        <div className="text-2xl font-bold text-orange-800">{dashboardStats?.lowStockCount || 0}</div>
+                        <p className="text-xs text-orange-600 mt-1">Items need restock</p>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -212,21 +235,27 @@ const Index = () => {
                     <CardTitle className="text-sage-800">Weekly Sales</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={salesData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                        <XAxis dataKey="name" stroke="#6b7280" />
-                        <YAxis stroke="#6b7280" />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: 'white', 
-                            border: '1px solid #d1d5db',
-                            borderRadius: '8px'
-                          }} 
-                        />
-                        <Bar dataKey="sales" fill="#8FBC8F" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    {loadingSalesData ? (
+                      <div className="h-[300px] flex items-center justify-center bg-gray-50 rounded">
+                        <p className="text-gray-400">Loading sales data...</p>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={salesData || []}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                          <XAxis dataKey="name" stroke="#6b7280" />
+                          <YAxis stroke="#6b7280" />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'white', 
+                              border: '1px solid #d1d5db',
+                              borderRadius: '8px'
+                            }} 
+                          />
+                          <Bar dataKey="sales" fill="#8FBC8F" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -235,35 +264,43 @@ const Index = () => {
                     <CardTitle className="text-sage-800">Product Categories</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie
-                          data={categoryData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={120}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {categoryData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
+                    {loadingCategoryData ? (
+                      <div className="h-[300px] flex items-center justify-center bg-gray-50 rounded">
+                        <p className="text-gray-400">Loading category data...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <PieChart>
+                            <Pie
+                              data={categoryData || []}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={120}
+                              paddingAngle={5}
+                              dataKey="value"
+                            >
+                              {categoryData?.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                        <div className="grid grid-cols-2 gap-2 mt-4">
+                          {categoryData?.map((item, index) => (
+                            <div key={index} className="flex items-center text-sm">
+                              <div 
+                                className="w-3 h-3 rounded mr-2" 
+                                style={{ backgroundColor: item.color }}
+                              ></div>
+                              <span className="text-sage-700">{item.name}</span>
+                            </div>
                           ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="grid grid-cols-2 gap-2 mt-4">
-                      {categoryData.map((item, index) => (
-                        <div key={index} className="flex items-center text-sm">
-                          <div 
-                            className="w-3 h-3 rounded mr-2" 
-                            style={{ backgroundColor: item.color }}
-                          ></div>
-                          <span className="text-sage-700">{item.name}</span>
                         </div>
-                      ))}
-                    </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -298,32 +335,42 @@ const Index = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {sampleProducts.map((product) => (
-                          <tr key={product.id} className="border-b border-sage-100 hover:bg-sage-25">
-                            <td className="p-4 font-medium text-sage-800">{product.name}</td>
-                            <td className="p-4 text-sage-600">{product.category}</td>
-                            <td className="p-4 text-sage-800">${product.price}</td>
-                            <td className="p-4 text-sage-800">{product.stock}</td>
-                            <td className="p-4">
-                              <Badge className={getStatusColor(product.status)}>
-                                {product.status}
-                              </Badge>
-                            </td>
-                            <td className="p-4">
-                              <div className="flex space-x-2">
-                                <Button variant="ghost" size="sm" className="text-sage-600 hover:text-sage-800">
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                                <Button variant="ghost" size="sm" className="text-sage-600 hover:text-sage-800">
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </td>
+                        {loadingProducts ? (
+                          <tr>
+                            <td colSpan={6} className="p-4 text-center text-gray-500">Loading products...</td>
                           </tr>
-                        ))}
+                        ) : products && products.length > 0 ? (
+                          products.map((product) => (
+                            <tr key={product.id} className="border-b border-sage-100 hover:bg-sage-25">
+                              <td className="p-4 font-medium text-sage-800">{product.name}</td>
+                              <td className="p-4 text-sage-600">{product.dosha_type || 'N/A'}</td>
+                              <td className="p-4 text-sage-800">${product.price}</td>
+                              <td className="p-4 text-sage-800">{product.stock_quantity}</td>
+                              <td className="p-4">
+                                <Badge className={product.stock_quantity < 10 ? getStatusColor('low stock') : getStatusColor('active')}>
+                                  {product.stock_quantity < 10 ? 'Low Stock' : 'Active'}
+                                </Badge>
+                              </td>
+                              <td className="p-4">
+                                <div className="flex space-x-2">
+                                  <Button variant="ghost" size="sm" className="text-sage-600 hover:text-sage-800">
+                                    <Eye className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="text-sage-600 hover:text-sage-800">
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={6} className="p-4 text-center text-gray-500">No products found</td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -354,29 +401,41 @@ const Index = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {sampleOrders.map((order) => (
-                          <tr key={order.id} className="border-b border-sage-100 hover:bg-sage-25">
-                            <td className="p-4 font-medium text-sage-800">{order.id}</td>
-                            <td className="p-4 text-sage-800">{order.customer}</td>
-                            <td className="p-4 text-sage-600">{order.date}</td>
-                            <td className="p-4">
-                              <Badge className={getStatusColor(order.status)}>
-                                {order.status}
-                              </Badge>
-                            </td>
-                            <td className="p-4 font-medium text-sage-800">${order.total}</td>
-                            <td className="p-4">
-                              <div className="flex space-x-2">
-                                <Button variant="ghost" size="sm" className="text-sage-600 hover:text-sage-800">
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                                <Button variant="ghost" size="sm" className="text-sage-600 hover:text-sage-800">
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </td>
+                        {loadingOrders ? (
+                          <tr>
+                            <td colSpan={6} className="p-4 text-center text-gray-500">Loading orders...</td>
                           </tr>
-                        ))}
+                        ) : orders && orders.length > 0 ? (
+                          orders.map((order) => (
+                            <tr key={order.id} className="border-b border-sage-100 hover:bg-sage-25">
+                              <td className="p-4 font-medium text-sage-800">#{order.id.substring(0, 8)}</td>
+                              <td className="p-4 text-sage-800">{order.customer}</td>
+                              <td className="p-4 text-sage-600">
+                                {new Date(order.created_at).toLocaleDateString()}
+                              </td>
+                              <td className="p-4">
+                                <Badge className={getStatusColor(order.status)}>
+                                  {order.status}
+                                </Badge>
+                              </td>
+                              <td className="p-4 font-medium text-sage-800">${order.total_amount}</td>
+                              <td className="p-4">
+                                <div className="flex space-x-2">
+                                  <Button variant="ghost" size="sm" className="text-sage-600 hover:text-sage-800">
+                                    <Eye className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="text-sage-600 hover:text-sage-800">
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={6} className="p-4 text-center text-gray-500">No orders found</td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -400,36 +459,52 @@ const Index = () => {
                         <tr>
                           <th className="text-left p-4 font-semibold text-sage-800">Name</th>
                           <th className="text-left p-4 font-semibold text-sage-800">Email</th>
-                          <th className="text-left p-4 font-semibold text-sage-800">Orders</th>
+                          <th className="text-left p-4 font-semibold text-sage-800">Location</th>
                           <th className="text-left p-4 font-semibold text-sage-800">Joined</th>
                           <th className="text-left p-4 font-semibold text-sage-800">Status</th>
                           <th className="text-left p-4 font-semibold text-sage-800">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {sampleUsers.map((user) => (
-                          <tr key={user.id} className="border-b border-sage-100 hover:bg-sage-25">
-                            <td className="p-4 font-medium text-sage-800">{user.name}</td>
-                            <td className="p-4 text-sage-600">{user.email}</td>
-                            <td className="p-4 text-sage-800">{user.orders}</td>
-                            <td className="p-4 text-sage-600">{user.joined}</td>
-                            <td className="p-4">
-                              <Badge className={getStatusColor(user.status)}>
-                                {user.status}
-                              </Badge>
-                            </td>
-                            <td className="p-4">
-                              <div className="flex space-x-2">
-                                <Button variant="ghost" size="sm" className="text-sage-600 hover:text-sage-800">
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                                <Button variant="ghost" size="sm" className="text-sage-600 hover:text-sage-800">
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </td>
+                        {loadingUsers ? (
+                          <tr>
+                            <td colSpan={6} className="p-4 text-center text-gray-500">Loading users...</td>
                           </tr>
-                        ))}
+                        ) : users && users.length > 0 ? (
+                          users.map((user) => (
+                            <tr key={user.id} className="border-b border-sage-100 hover:bg-sage-25">
+                              <td className="p-4 font-medium text-sage-800">
+                                {user.profile.first_name} {user.profile.last_name}
+                              </td>
+                              <td className="p-4 text-sage-600">{user.email}</td>
+                              <td className="p-4 text-sage-800">
+                                {user.profile.city ? `${user.profile.city}, ${user.profile.country || ''}` : 'N/A'}
+                              </td>
+                              <td className="p-4 text-sage-600">
+                                {new Date(user.created_at).toLocaleDateString()}
+                              </td>
+                              <td className="p-4">
+                                <Badge className={getStatusColor('active')}>
+                                  Active
+                                </Badge>
+                              </td>
+                              <td className="p-4">
+                                <div className="flex space-x-2">
+                                  <Button variant="ghost" size="sm" className="text-sage-600 hover:text-sage-800">
+                                    <Eye className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="text-sage-600 hover:text-sage-800">
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={6} className="p-4 text-center text-gray-500">No users found</td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
