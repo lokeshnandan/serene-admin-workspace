@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { Database } from "@/integrations/supabase/types";
 
 export interface Product {
   id: string;
@@ -10,7 +11,7 @@ export interface Product {
   stock_quantity: number;
   category_id: string | null;
   is_featured: boolean | null;
-  dosha_type: string | null;
+  dosha_type: Database["public"]["Enums"]["dosha_type"] | null;
   image_urls: string[] | null;
   sku: string | null;
   dimensions: string | null;
@@ -18,6 +19,8 @@ export interface Product {
   created_at: string;
   updated_at: string;
 }
+
+export type ProductCreateInput = Omit<Product, "id" | "created_at" | "updated_at">;
 
 export const fetchProducts = async (): Promise<Product[]> => {
   try {
@@ -67,11 +70,11 @@ export const fetchLowStockProducts = async (): Promise<Product[]> => {
   }
 };
 
-export const createProduct = async (product: Omit<Product, "id" | "created_at" | "updated_at">): Promise<Product | null> => {
+export const createProduct = async (product: ProductCreateInput): Promise<Product | null> => {
   try {
     const { data, error } = await supabase
       .from("products")
-      .insert([product])
+      .insert(product)
       .select()
       .single();
 
@@ -101,7 +104,7 @@ export const createProduct = async (product: Omit<Product, "id" | "created_at" |
   }
 };
 
-export const updateProduct = async (id: string, product: Partial<Product>): Promise<Product | null> => {
+export const updateProduct = async (id: string, product: Partial<ProductCreateInput>): Promise<Product | null> => {
   try {
     const { data, error } = await supabase
       .from("products")
