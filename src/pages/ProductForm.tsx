@@ -14,6 +14,11 @@ const ProductFormPage = () => {
   const handleSubmit = async (productData: any) => {
     setIsLoading(true);
     try {
+      // Transform category_id if it's "none"
+      if (productData.category_id === "none") {
+        productData.category_id = null;
+      }
+      
       const result = await createProduct(productData);
       if (result) {
         toast({

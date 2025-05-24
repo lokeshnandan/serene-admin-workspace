@@ -27,7 +27,7 @@ const productSchema = z.object({
   description: z.string().optional(),
   price: z.coerce.number().positive({ message: "Price must be a positive number" }),
   stock_quantity: z.coerce.number().int().nonnegative({ message: "Stock must be a non-negative integer" }),
-  category_id: z.string().optional().nullable(),
+  category_id: z.string().nullable(),
   is_featured: z.boolean().default(false),
   dosha_type: z.string().optional(),
   sku: z.string().optional(),
@@ -173,8 +173,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, isLoading 
                     <FormLabel>Category</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
-                      defaultValue={field.value?.toString() || ""}
-                      value={field.value?.toString() || ""}
+                      defaultValue={field.value?.toString() || undefined}
+                      value={field.value?.toString() || undefined}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -182,7 +182,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, isLoading 
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        {/* This is the key fix: use 'none' instead of empty string for value */}
+                        <SelectItem value="none">None</SelectItem>
                         {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}
@@ -308,7 +309,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, isLoading 
             
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button type="button" variant="outline">
+            <Button type="button" variant="outline" onClick={() => history.back()}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
