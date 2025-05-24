@@ -28,7 +28,8 @@ import {
   AlertTriangle,
   Eye,
   Edit,
-  Trash2
+  Trash2,
+  Folder
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchProducts, fetchLowStockProducts } from '@/services/productService';
@@ -36,6 +37,7 @@ import { fetchDashboardStats, fetchSalesByDay, fetchSalesByCategory } from '@/se
 import { fetchOrders } from '@/services/orderService';
 import { fetchUsers } from '@/services/userService';
 import { useNavigate } from 'react-router-dom';
+import CategoriesList from '@/components/CategoriesList';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
