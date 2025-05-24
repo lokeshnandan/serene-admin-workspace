@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ProductFormPage from "./pages/ProductForm";
+import UserEdit from "./pages/UserEdit";
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -32,6 +34,22 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Index />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/products/new" 
+            element={
+              <ProtectedRoute>
+                <ProductFormPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/users/:userId" 
+            element={
+              <ProtectedRoute>
+                <UserEdit />
               </ProtectedRoute>
             } 
           />

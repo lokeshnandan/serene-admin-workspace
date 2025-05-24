@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,9 +35,11 @@ import { fetchProducts, fetchLowStockProducts } from '@/services/productService'
 import { fetchDashboardStats, fetchSalesByDay, fetchSalesByCategory } from '@/services/analyticsService';
 import { fetchOrders } from '@/services/orderService';
 import { fetchUsers } from '@/services/userService';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const navigate = useNavigate();
 
   // Fetch data using React Query
   const { data: products, isLoading: loadingProducts } = useQuery({
@@ -81,6 +82,16 @@ const Index = () => {
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  // Handler for Add Product button
+  const handleAddProduct = () => {
+    navigate('/products/new');
+  };
+
+  // Handler for Edit User button
+  const handleEditUser = (userId: string) => {
+    navigate(`/users/${userId}`);
   };
 
   return (
@@ -314,7 +325,7 @@ const Index = () => {
                   <h2 className="text-3xl font-bold text-sage-800 mb-2">Products</h2>
                   <p className="text-sage-600">Manage your yoga merchandise and ayurvedic products</p>
                 </div>
-                <Button className="bg-sage-500 hover:bg-sage-600 text-white">
+                <Button className="bg-sage-500 hover:bg-sage-600 text-white" onClick={handleAddProduct}>
                   <Package className="w-4 h-4 mr-2" />
                   Add Product
                 </Button>
@@ -474,7 +485,7 @@ const Index = () => {
                           users.map((user) => (
                             <tr key={user.id} className="border-b border-sage-100 hover:bg-sage-25">
                               <td className="p-4 font-medium text-sage-800">
-                                {user.profile.first_name} {user.profile.last_name}
+                                {user.profile.first_name || 'N/A'} {user.profile.last_name || ''}
                               </td>
                               <td className="p-4 text-sage-600">{user.email}</td>
                               <td className="p-4 text-sage-800">
@@ -493,7 +504,12 @@ const Index = () => {
                                   <Button variant="ghost" size="sm" className="text-sage-600 hover:text-sage-800">
                                     <Eye className="w-4 h-4" />
                                   </Button>
-                                  <Button variant="ghost" size="sm" className="text-sage-600 hover:text-sage-800">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="text-sage-600 hover:text-sage-800"
+                                    onClick={() => handleEditUser(user.id)}
+                                  >
                                     <Edit className="w-4 h-4" />
                                   </Button>
                                 </div>
