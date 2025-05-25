@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -79,7 +80,12 @@ const Index = () => {
 
   const colors = ['#8B5CF6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444'];
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null | undefined) => {
+    // Handle undefined, null, or empty status
+    if (!status) {
+      return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
+    }
+    
     switch (status.toLowerCase()) {
       case 'completed':
         return 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200';
@@ -418,10 +424,10 @@ const Index = () => {
                           orders.slice(0, 10).map((order: any) => (
                             <tr key={order.id} className="border-b border-sage-100 hover:bg-sage-25">
                               <td className="p-4 font-medium text-sage-800">#{order.id.slice(0, 8)}</td>
-                              <td className="p-4 text-sage-600">{order.user_id}</td>
+                              <td className="p-4 text-sage-600">{order.customer || 'Guest'}</td>
                               <td className="p-4">
                                 <Badge className={getStatusColor(order.status)}>
-                                  {order.status}
+                                  {order.status || 'Unknown'}
                                 </Badge>
                               </td>
                               <td className="p-4 font-medium text-sage-800">{formatSimpleCurrency(order.total_amount)}</td>
@@ -485,7 +491,7 @@ const Index = () => {
                               <td className="p-4 text-sage-600">{user.email}</td>
                               <td className="p-4">
                                 <Badge className={getStatusColor(user.role)}>
-                                  {user.role}
+                                  {user.role || 'User'}
                                 </Badge>
                               </td>
                               <td className="p-4">
