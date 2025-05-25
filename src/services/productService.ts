@@ -50,6 +50,35 @@ export const fetchProducts = async (): Promise<Product[]> => {
   }
 };
 
+export const fetchProduct = async (id: string): Promise<Product | null> => {
+  try {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      toast({
+        title: "Error fetching product",
+        description: error.message,
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error("Error fetching product:", error);
+    toast({
+      title: "Error fetching product",
+      description: error.message || "An unexpected error occurred",
+      variant: "destructive",
+    });
+    return null;
+  }
+};
+
 export const fetchLowStockProducts = async (): Promise<Product[]> => {
   try {
     const { data, error } = await supabase

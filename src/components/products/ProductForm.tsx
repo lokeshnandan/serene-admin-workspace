@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,14 +12,13 @@ import { z } from "zod";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchCategories } from "@/services/categoryService";
+import { X, Plus, Upload } from "lucide-react";
 
 interface ProductFormProps {
   product?: any;
   onSubmit: (data: any) => void;
   isLoading: boolean;
 }
-
-const doshaTypes = ["vata", "pitta", "kapha", "tridoshic", "not_applicable"];
 
 // Define the form schema using Zod
 const productSchema = z.object({
@@ -28,7 +28,6 @@ const productSchema = z.object({
   stock_quantity: z.coerce.number().int().nonnegative({ message: "Stock must be a non-negative integer" }),
   category_id: z.string().nullable(),
   is_featured: z.boolean().default(false),
-  dosha_type: z.string().optional(),
   sku: z.string().optional(),
   dimensions: z.string().optional(),
   weight: z.coerce.number().positive().optional(),
@@ -40,6 +39,8 @@ type ProductFormValues = z.infer<typeof productSchema>;
 const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, isLoading }) => {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [imageUrls, setImageUrls] = useState<string[]>(product?.image_urls || []);
+  const [newImageUrl, setNewImageUrl] = useState("");
 
   // Create form
   const form = useForm<ProductFormValues>({
@@ -51,7 +52,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, isLoading 
       stock_quantity: product?.stock_quantity || 0,
       category_id: product?.category_id || null,
       is_featured: product?.is_featured || false,
-      dosha_type: product?.dosha_type || "not_applicable",
       sku: product?.sku || "",
       dimensions: product?.dimensions || "",
       weight: product?.weight || 0,
@@ -76,8 +76,28 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, isLoading 
     loadCategories();
   }, []);
 
+  // Update form when imageUrls change
+  useEffect(() => {
+    form.setValue('image_urls', imageUrls);
+  }, [imageUrls, form]);
+
   const handleFormSubmit = (values: ProductFormValues) => {
-    onSubmit(values);
+    const submitData = {
+      ...values,
+      image_urls: imageUrls,
+    };
+    onSubmit(submitData);
+  };
+
+  const addImageUrl = () => {
+    if (newImageUrl.trim() && !imageUrls.includes(newImageUrl.trim())) {
+      setImageUrls([...imageUrls, newImageUrl.trim()]);
+      setNewImageUrl("");
+    }
+  };
+
+  const removeImageUrl = (urlToRemove: string) => {
+    setImageUrls(imageUrls.filter(url => url !== urlToRemove));
   };
 
   return (
@@ -163,67 +183,35 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, isLoading 
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="category_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value?.toString() || undefined}
-                      value={field.value?.toString() || undefined}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {/* This is the key fix: use 'none' instead of empty string for value */}
-                        <SelectItem value="none">None</SelectItem>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="dosha_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Dosha Type</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value || "not_applicable"}
-                      value={field.value || "not_applicable"}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a dosha type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {doshaTypes.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ')}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="category_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value?.toString() || undefined}
+                    value={field.value?.toString() || undefined}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -283,6 +271,67 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, isLoading 
               )}
             />
 
+            {/* Product Images Section */}
+            <div className="space-y-4">
+              <FormLabel>Product Images</FormLabel>
+              
+              {/* Add new image URL */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter image URL"
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImageUrl())}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addImageUrl}
+                  disabled={!newImageUrl.trim()}
+                >
+                  <Plus className="w-4 h-4" />
+                  Add
+                </Button>
+              </div>
+
+              {/* Display current images */}
+              {imageUrls.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Current Images:</Label>
+                  <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
+                    {imageUrls.map((url, index) => (
+                      <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded border">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <img 
+                            src={url} 
+                            alt={`Product ${index + 1}`}
+                            className="w-8 h-8 object-cover rounded"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                          <span className="text-sm text-gray-600 truncate">{url}</span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeImageUrl(url)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <FormDescription>
+                Add image URLs for your product. You can add multiple images.
+              </FormDescription>
+            </div>
+
             <FormField
               control={form.control}
               name="is_featured"
@@ -303,8 +352,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, isLoading 
                 </FormItem>
               )}
             />
-
-            {/* Future enhancement: Add image upload functionality */}
             
           </CardContent>
           <CardFooter className="flex justify-between">

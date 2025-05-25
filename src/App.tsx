@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProductFormPage from "./pages/ProductForm";
+import ProductEditPage from "./pages/ProductEdit";
 import UserEdit from "./pages/UserEdit";
 
 // Create React Query client
@@ -42,6 +43,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <ProductFormPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/products/:id/edit" 
+            element={
+              <ProtectedRoute>
+                <ProductEditPage />
               </ProtectedRoute>
             } 
           />
