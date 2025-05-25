@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,8 @@ import {
   Home,
   Folder,
   Edit,
-  Eye
+  Eye,
+  LogOut
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchProducts } from '@/services/productService';
@@ -38,10 +38,12 @@ import { fetchCategories } from '@/services/categoryService';
 import { formatSimpleCurrency } from '@/lib/currency';
 import { useNavigate } from 'react-router-dom';
 import CategoriesList from '@/components/CategoriesList';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const navigate = useNavigate();
+  const { signOut } = useAuth();
 
   const { data: products, isLoading: loadingProducts } = useQuery({
     queryKey: ['products'],
@@ -104,17 +106,25 @@ const Index = () => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sage-50 to-sage-100">
       <div className="flex">
         {/* Sidebar */}
-        <div className="w-64 bg-white shadow-lg h-screen sticky top-0">
+        <div className="w-64 bg-white shadow-lg h-screen sticky top-0 flex flex-col">
           <div className="p-6 border-b border-sage-200">
             <h1 className="text-xl font-bold text-sage-800">Ayurvedic Store</h1>
             <p className="text-sm text-sage-600 mt-1">Admin Dashboard</p>
           </div>
           
-          <nav className="mt-6 px-4 space-y-2">
+          <nav className="mt-6 px-4 space-y-2 flex-1">
             <Button
               variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
               className="w-full justify-start hover:bg-sage-50 text-sage-700"
@@ -156,6 +166,18 @@ const Index = () => {
               Users
             </Button>
           </nav>
+
+          {/* Logout Button at the bottom */}
+          <div className="p-4 border-t border-sage-200">
+            <Button
+              variant="ghost"
+              className="w-full justify-start hover:bg-red-50 text-red-600 hover:text-red-700"
+              onClick={handleLogout}
+            >
+              <LogOut className="w-4 h-4 mr-3" />
+              Logout
+            </Button>
+          </div>
         </div>
 
         {/* Main Content */}
