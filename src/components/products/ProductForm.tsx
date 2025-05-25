@@ -100,6 +100,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, isLoading 
     setImageUrls(imageUrls.filter(url => url !== urlToRemove));
   };
 
+  const getCurrentCategoryValue = () => {
+    const currentValue = form.watch('category_id');
+    if (!currentValue) return undefined;
+    if (currentValue === "none") return "none";
+    return currentValue;
+  };
+
   return (
     <Card className="w-full max-w-2xl">
       <CardHeader>
@@ -191,8 +198,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, isLoading 
                   <FormLabel>Category</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
-                    defaultValue={field.value?.toString() || undefined}
-                    value={field.value?.toString() || undefined}
+                    value={getCurrentCategoryValue()}
                   >
                     <FormControl>
                       <SelectTrigger>

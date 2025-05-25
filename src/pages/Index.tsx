@@ -106,6 +106,12 @@ const Index = () => {
     }
   };
 
+  const getCategoryName = (categoryId: string | null | undefined) => {
+    if (!categoryId || !categories) return 'No Category';
+    const category = categories.find((cat: any) => cat.id === categoryId);
+    return category ? category.name : 'No Category';
+  };
+
   const handleLogout = async () => {
     try {
       await signOut();
@@ -120,7 +126,7 @@ const Index = () => {
         {/* Sidebar */}
         <div className="w-64 bg-white shadow-lg h-screen sticky top-0 flex flex-col">
           <div className="p-6 border-b border-sage-200">
-            <h1 className="text-xl font-bold text-sage-800">Ayurvedic Store</h1>
+            <h1 className="text-xl font-bold text-sage-800">SabrShukr</h1>
             <p className="text-sm text-sage-600 mt-1">Admin Dashboard</p>
           </div>
           
@@ -187,7 +193,7 @@ const Index = () => {
             <div className="space-y-6">
               <div>
                 <h2 className="text-3xl font-bold text-sage-800 mb-2">Dashboard Overview</h2>
-                <p className="text-sage-600">Welcome to your Ayurvedic store management system</p>
+                <p className="text-sage-600">Welcome to your SabrShukr management system</p>
               </div>
 
               {/* Stats Cards */}
@@ -351,6 +357,7 @@ const Index = () => {
                       <thead>
                         <tr className="border-b border-sage-200">
                           <th className="text-left p-4 font-medium text-sage-700">Name</th>
+                          <th className="text-left p-4 font-medium text-sage-700">Category</th>
                           <th className="text-left p-4 font-medium text-sage-700">Price</th>
                           <th className="text-left p-4 font-medium text-sage-700">Stock</th>
                           <th className="text-left p-4 font-medium text-sage-700">Status</th>
@@ -360,12 +367,13 @@ const Index = () => {
                       <tbody>
                         {loadingProducts ? (
                           <tr>
-                            <td colSpan={5} className="text-center p-8 text-sage-500">Loading products...</td>
+                            <td colSpan={6} className="text-center p-8 text-sage-500">Loading products...</td>
                           </tr>
                         ) : products && products.length > 0 ? (
                           products.map((product: any) => (
                             <tr key={product.id} className="border-b border-sage-100 hover:bg-sage-25">
                               <td className="p-4 font-medium text-sage-800">{product.name}</td>
+                              <td className="p-4 text-sage-600">{getCategoryName(product.category_id)}</td>
                               <td className="p-4 text-sage-800">{formatSimpleCurrency(product.price)}</td>
                               <td className="p-4 text-sage-800">{product.stock_quantity}</td>
                               <td className="p-4">
@@ -392,7 +400,7 @@ const Index = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={5} className="text-center p-8 text-sage-500">No products found</td>
+                            <td colSpan={6} className="text-center p-8 text-sage-500">No products found</td>
                           </tr>
                         )}
                       </tbody>
