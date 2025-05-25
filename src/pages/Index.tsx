@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,8 @@ import { fetchProducts, fetchLowStockProducts } from '@/services/productService'
 import { fetchDashboardStats, fetchSalesByDay, fetchSalesByCategory } from '@/services/analyticsService';
 import { fetchOrders } from '@/services/orderService';
 import { fetchUsers } from '@/services/userService';
+import { fetchCategories } from '@/services/categoryService';
+import { formatSimpleCurrency } from '@/lib/currency';
 import { useNavigate } from 'react-router-dom';
 import CategoriesList from '@/components/CategoriesList';
 
@@ -57,6 +60,11 @@ const Index = () => {
   const { data: users, isLoading: loadingUsers } = useQuery({
     queryKey: ['users'],
     queryFn: fetchUsers
+  });
+
+  const { data: categories, isLoading: loadingCategories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: fetchCategories
   });
 
   const { data: dashboardStats, isLoading: loadingStats } = useQuery({
@@ -145,6 +153,14 @@ const Index = () => {
               Products
             </Button>
             <Button
+              variant={activeTab === 'categories' ? 'default' : 'ghost'}
+              className="w-full justify-start hover:bg-sage-50 text-sage-700"
+              onClick={() => setActiveTab('categories')}
+            >
+              <Folder className="w-4 h-4 mr-3" />
+              Categories
+            </Button>
+            <Button
               variant={activeTab === 'orders' ? 'default' : 'ghost'}
               className="w-full justify-start hover:bg-sage-50 text-sage-700"
               onClick={() => setActiveTab('orders')}
@@ -184,7 +200,7 @@ const Index = () => {
                     ) : (
                       <>
                         <div className="text-2xl font-bold text-sage-800">
-                          ${dashboardStats?.totalSales?.toFixed(2) || '0.00'}
+                          {formatSimpleCurrency(dashboardStats?.totalSales || 0)}
                         </div>
                         <p className="text-xs text-green-600 mt-1">+15% from last month</p>
                       </>
@@ -357,7 +373,7 @@ const Index = () => {
                             <tr key={product.id} className="border-b border-sage-100 hover:bg-sage-25">
                               <td className="p-4 font-medium text-sage-800">{product.name}</td>
                               <td className="p-4 text-sage-600">{product.dosha_type || 'N/A'}</td>
-                              <td className="p-4 text-sage-800">${product.price}</td>
+                              <td className="p-4 text-sage-800">{formatSimpleCurrency(product.price)}</td>
                               <td className="p-4 text-sage-800">{product.stock_quantity}</td>
                               <td className="p-4">
                                 <Badge className={product.stock_quantity < 10 ? getStatusColor('low stock') : getStatusColor('active')}>
@@ -389,6 +405,16 @@ const Index = () => {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          )}
+
+          {activeTab === 'categories' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-3xl font-bold text-sage-800 mb-2">Categories</h2>
+                <p className="text-sage-600">Manage product categories and organization</p>
+              </div>
+              <CategoriesList />
             </div>
           )}
 
@@ -431,7 +457,7 @@ const Index = () => {
                                   {order.status}
                                 </Badge>
                               </td>
-                              <td className="p-4 font-medium text-sage-800">${order.total_amount}</td>
+                              <td className="p-4 font-medium text-sage-800">{formatSimpleCurrency(order.total_amount)}</td>
                               <td className="p-4">
                                 <div className="flex space-x-2">
                                   <Button variant="ghost" size="sm" className="text-sage-600 hover:text-sage-800">
