@@ -3,18 +3,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { OrderStatus } from "./orderService";
 
 export interface SalesByDay {
-  name: string; // Day name or date
-  sales: number; // Total sales amount
+  day: string; // Changed from 'name' to 'day' to match the chart expectations
+  total: number; // Changed from 'sales' to 'total' to match the chart expectations
 }
 
 export interface CategorySales {
   name: string; // Category name
-  value: number; // Sales value or percentage
+  total: number; // Changed from 'value' to 'total' to match the chart expectations
   color: string; // Color for chart
 }
 
-export const fetchSalesByDay = async (days = 7): Promise<SalesByDay[]> => {
+export const fetchSalesByDay = async (): Promise<SalesByDay[]> => {
   try {
+    const days = 7; // Fixed to 7 days
     // Get start date (X days ago)
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
@@ -52,7 +53,7 @@ export const fetchSalesByDay = async (days = 7): Promise<SalesByDay[]> => {
     });
     
     // Convert to array format for charts
-    return Object.entries(salesByDay).map(([name, sales]) => ({ name, sales }));
+    return Object.entries(salesByDay).map(([day, total]) => ({ day, total }));
   } catch (error) {
     console.error("Error in fetchSalesByDay:", error);
     return [];
@@ -102,9 +103,9 @@ export const fetchSalesByCategory = async (): Promise<CategorySales[]> => {
     const colors = ['#8FBC8F', '#D2B48C', '#DDA0DD', '#F0E68C', '#ADD8E6', '#FFB6C1', '#98FB98'];
     
     // Convert to array format for charts
-    return Object.entries(salesByCategory).map(([categoryId, value], index) => ({
+    return Object.entries(salesByCategory).map(([categoryId, total], index) => ({
       name: categoryMap[categoryId] || 'Unknown',
-      value,
+      total,
       color: colors[index % colors.length]
     }));
   } catch (error) {
@@ -172,6 +173,16 @@ export const fetchDashboardStats = async () => {
       return null;
     }
     
+    // Products count
+    const { count: productsCount, error: productsError } = await supabase
+      .from("products")
+      .select("*", { count: 'exact', head: true });
+    
+    if (productsError) {
+      console.error("Error fetching products count:", productsError);
+      return null;
+    }
+    
     // Active users (profiles)
     const { count: usersCount, error: usersError } = await supabase
       .from("profiles")
@@ -182,22 +193,25 @@ export const fetchDashboardStats = async () => {
       return null;
     }
     
-    // Low stock products
-    const { data: lowStockData, error: lowStockError } = await supabase
-      .from("products")
-      .select("*")
-      .lt("stock_quantity", 10);
+    // Calculate new customers (created in last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
-    if (lowStockError) {
-      console.error("Error fetching low stock data:", lowStockError);
+    const { count: newCustomersCount, error: newCustomersError } = await supabase
+      .from("profiles")
+      .select("*", { count: 'exact', head: true })
+      .gte("created_at", thirtyDaysAgo.toISOString());
+    
+    if (newCustomersError) {
+      console.error("Error fetching new customers count:", newCustomersError);
       return null;
     }
     
     return {
       totalSales,
-      ordersCount: ordersCount || 0,
-      usersCount: usersCount || 0,
-      lowStockCount: lowStockData?.length || 0
+      totalOrders: ordersCount || 0,
+      totalProducts: productsCount || 0,
+      newCustomers: newCustomersCount || 0
     };
   } catch (error) {
     console.error("Error in fetchDashboardStats:", error);
